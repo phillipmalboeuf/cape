@@ -4,7 +4,8 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  html {
+    color-scheme: dark;
   }
 }
 
@@ -31,8 +32,12 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+button {
+  cursor: pointer;
+  color: currentColor;
+  background-color: white;
+  font-size: inherit;
+  border: none;
+  padding: 0.5em;
+  border-radius: 0.5em;
 }

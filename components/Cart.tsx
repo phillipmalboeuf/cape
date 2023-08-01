@@ -4,6 +4,7 @@
 import { FunctionComponent, useEffect, useState } from 'react'
 import { CartProvider, useCart } from 'react-use-cart'
 import { CatalogObject } from 'square'
+import { checkout, invoice } from '@/app/actions'
 
 export const Wrap: FunctionComponent<{ children: React.ReactNode }> = ({ children }) => {
   return <CartProvider>
@@ -24,7 +25,7 @@ export const AddToCart: FunctionComponent<{
       }, 1)
     }}>
       <input type='hidden' name='product_variation_id' value={product.itemData.variations[0].id} />
-      <button type='submit'>Buy</button>
+      <button type='submit'>Add to Cart</button>
     </form>
 }
 
@@ -36,12 +37,23 @@ export const Cart: FunctionComponent<{
   useEffect(() => {
     setIsClient(true)
   }, [])
-  
 
-  return <ol>
-    {isClient && items.map(item => <li key={item.id}>
-      {[item.name, item.id, item.quantity].join(' / ')}
-      <button onClick={() => updateItemQuantity(item.id, item.quantity - 1)}>–</button> <button onClick={() => updateItemQuantity(item.id, item.quantity + 1)}>+</button>
-    </li>)}
-  </ol>
+  return isClient ? <>
+    <ol>
+      {items.map(item => <li key={item.id}>
+        {[item.name, item.id, item.quantity].join(' / ')}
+        <button type='button' onClick={() => updateItemQuantity(item.id, item.quantity - 1)}>–</button> <button onClick={() => updateItemQuantity(item.id, item.quantity + 1)}>+</button>
+      </li>)}
+    </ol>
+
+    <form action={checkout}>
+      <input type='hidden' name='items' value={JSON.stringify(items)} />
+      <button type='submit'>Checkout</button>
+    </form>
+
+    <form action={invoice}>
+      <input type='hidden' name='items' value={JSON.stringify(items)} />
+      <button type='submit'>Invoice</button>
+    </form>
+  </> : null
 }
