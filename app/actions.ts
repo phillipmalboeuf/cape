@@ -2,8 +2,9 @@
 
 import { square } from '@/clients/square'
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { DateTime } from 'luxon'
-import { log } from './helpers'
+import { hashPassword, log } from './helpers'
 import { Item } from 'react-use-cart'
 
 export const buy = async (data: FormData) => {
@@ -108,4 +109,81 @@ export const checkout = async (data: FormData) => {
   // return {
   //   link
   // }
+}
+
+
+export const signup = async (data: FormData) => {
+  const customerId = '7D44X9294QETTXM2ZD9D25S0FR'
+  const password = hashPassword(data.get('password') as string)
+  const response = await square.customerCustomAttributesApi.bulkUpsertCustomerCustomAttributes({
+    values: {
+      'pw': {
+        customerId,
+        customAttribute: {
+          key: 'pw',
+          value: password.password
+        }
+      },
+      'salt': {
+        customerId,
+        customAttribute: {
+          key: 'salt',
+          value: password.salt
+        }
+      }
+    }
+  })
+  // log(response.result)
+  cookies().set('customer', customerId, { httpOnly: true, path: '/' })
+  // redirect(link.result.paymentLink.longUrl)
+  return {
+    // response
+  }
+}
+
+
+export const login = async (data: FormData) => {
+  const customer = await square.customersApi.searchCustomers({
+    query: {
+      filter: {
+        emailAddress: {
+          exact: 'phil@phils.computer'
+        }
+      }
+    }
+  })
+  // log(customer.result)
+
+  if (!customer.result.customers.length) {
+    throw Error('no customer')
+  }
+
+  const attributes = await square.customerCustomAttributesApi.listCustomerCustomAttributes(customer.result.customers[0].id)
+  // log(attributes.result)
+
+  const customerPassword = hashPassword(data.get('password') as string, attributes.result.customAttributes.find(attribute => attribute.key === 'salt').value as string)
+
+  // log([customerPassword.password, attributes.result.customAttributes.find(attribute => attribute.key === 'pw').value as string])
+  cookies().set('customer', customer.result.customers[0].id, { httpOnly: true, path: '/' })
+  // redirect(link.result.paymentLink.longUrl)
+  // return {
+  //   link
+  // }
+}
+
+export const logout = async (data: FormData) => {
+ 
+  cookies().delete('customer')
+  // redirect(link.result.paymentLink.longUrl)
+  // return {
+  //   link
+  // }
+}
+
+export const customer = async () => {
+  const customer = cookies().has('customer')
+    ? await square.customersApi.retrieveCustomer(cookies().get('customer').value)
+    : undefined
+
+  return customer
 }
