@@ -1,9 +1,13 @@
-export const log = (data: any) => {
-  return console.log(JSON.stringify(data, (key, value) =>
+export const stringify = (data: any) => {
+  return JSON.stringify(data, (key, value) =>
     typeof value === 'bigint'
         ? value.toString()
         : value,
-    2))
+    2)
+}
+
+export const log = (data: any) => {
+  return console.log(stringify(data))
 }
 
 import { randomBytes, createHmac } from 'crypto'

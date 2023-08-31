@@ -7,6 +7,7 @@ import { log } from './helpers'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { Nav } from '@/components/Nav'
+import { Subscriptions } from '@/components/Subscription'
 
 export default async function Home() {
   const items = await square.catalogApi.searchCatalogItems({
@@ -22,6 +23,16 @@ export default async function Home() {
     <main className={styles.main}>
       <Nav />
       <h1>À la Coopérative pour l'Agriculture de Proximité Écologique</h1>
+
+      {me
+      ? <>
+        <p>Hi {me.result.customer.givenName}</p>
+        <Subscriptions me={me.result.customer} />
+        <form action={logout}>
+          <button>Logout</button>
+        </form>
+      </>
+      : <>
       <form action={signup}>
         <input name='password' type='password' autoComplete='new-password' />
         <button>Signup</button>
@@ -31,15 +42,9 @@ export default async function Home() {
         <input name='password' type='password' />
         <button>Login</button>
       </form>
-
-      {me && <>
-        <p>Hi {me.result.customer.givenName}</p>
-        <form action={logout}>
-          <button>Logout</button>
-        </form>
       </>}
 
-      <Wrap>
+      <Wrap id='new'>
       <ol>
         {items.result.items?.map(product => <li key={product.id}>
           <h3>{product.itemData.name}</h3>
@@ -47,7 +52,7 @@ export default async function Home() {
           <AddToCart product={product} />
         </li>)}
       </ol>
-      <Cart />
+      <Cart action={checkout} label='Checkout' />
       </Wrap>
       <h2>{butter.result.object?.itemData?.name}</h2>
     </main>

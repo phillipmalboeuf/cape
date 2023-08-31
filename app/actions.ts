@@ -3,9 +3,11 @@
 import { square } from '@/clients/square'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
+import { unstable_cache } from 'next/cache'
 import { DateTime } from 'luxon'
 import { hashPassword, log } from './helpers'
 import { Item } from 'react-use-cart'
+import { revalidatePath, revalidateTag } from 'next/cache'
 
 export const buy = async (data: FormData) => {
   const link = await square.checkoutApi.createPaymentLink({
@@ -104,11 +106,36 @@ export const checkout = async (data: FormData) => {
       merchantSupportEmail: 'info@cape.coop',
     }
   })
-  log(link.result)
+  log(link)
   redirect(link.result.paymentLink.longUrl)
   // return {
   //   link
   // }
+}
+
+export const update = async (data: FormData) => {
+  const items: Item[] = JSON.parse(data.get('items') as string)
+  const [id, version] = (data.get('id') as string).split('–')
+  
+  const order = await square.ordersApi.updateOrder(id, {
+    fieldsToClear: ['line_items'],
+    order: {
+      version: Number(version),
+      locationId: 'LMZ1D77E3HVRH',
+      lineItems: items.map(item => (
+        {
+          quantity: item.quantity.toString(),
+          catalogObjectId: item.id
+        }
+      ))
+    }
+  })
+  
+  revalidateTag('account')
+
+  return {
+    order
+  }
 }
 
 
